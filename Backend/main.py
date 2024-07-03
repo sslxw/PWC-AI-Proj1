@@ -13,7 +13,7 @@ app = FastAPI()
 
 # Load environment variables
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = ""
 
 # Set up CORS
 origins = [
@@ -63,7 +63,7 @@ async def upload_file(file: UploadFile):
             {"role": "system", "content": "You are a helpful assistant that identifies and highlights key entities in the provided text."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=150
+        max_tokens=4000
     )
     ner_result = response['choices'][0]['message']['content']
     
@@ -78,7 +78,7 @@ async def summarize(request: SummarizationRequest):
             {"role": "system", "content": "You are a helpful assistant that provides concise summaries of the text provided."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=150
+        max_tokens=4000
     )
     summary = response['choices'][0]['message']['content']
     return {"summary": summary}
@@ -88,13 +88,13 @@ async def chat(request: ChatHistory):
     # Add document text and entities to the conversation context
     system_message = {
         "role": "system",
-        "content": f"Document: {request.document_text}\n\nEntities: {request.entities}"
+        "content": f"only answer questions that are related to the document and entities if they are not related apologize and say you cant answer it. Document: {request.document_text}\n\nEntities: {request.entities}."
     }
     messages = [system_message] + request.history
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=messages,
-        max_tokens=150
+        max_tokens=4000
     )
     answer = response['choices'][0]['message']['content']
     return {"answer": answer}

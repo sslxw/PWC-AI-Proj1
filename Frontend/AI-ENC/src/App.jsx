@@ -3,8 +3,10 @@ import Chat from './components/Chat';
 
 function App() {
     return (
-        <div className="App">
-            <h1>Document Summarization and Chatbot</h1>
+        <div className="app">
+            <header className="app-header">
+                <h1>Document Summarization and Chatbot</h1>
+            </header>
             <Chat />
         </div>
     );

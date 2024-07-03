@@ -2,8 +2,8 @@ import React from 'react';
 
 const Message = ({ role, content }) => {
     return (
-        <div className={role}>
-            <strong>{role}: </strong>{content}
+        <div className={`message ${role}`}>
+            <strong>{role === 'assistant' ? 'Bot' : 'You'}:</strong> {content}
         </div>
     );
 };
