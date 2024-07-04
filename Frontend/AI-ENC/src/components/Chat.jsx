@@ -3,13 +3,15 @@ import axios from 'axios';
 import Message from './Message';
 import SummaryOptions from './SummaryOptions';
 
+
 const Chat = () => {
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState([{ role: 'assistant', content: 'Welcome! Please upload a file to get started.' }]);
     const [input, setInput] = useState('');
     const [documentText, setDocumentText] = useState('');
-    const [entities, setEntities] = useState('');
     const [summaryOptions, setSummaryOptions] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [file, setFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
     const sendMessage = async () => {
         const newMessage = { role: 'user', content: input };
@@ -20,8 +22,7 @@ const Chat = () => {
 
         const response = await axios.post('http://localhost:8001/chat/', {
             history: updatedMessages,
-            document_text: documentText,
-            entities: entities
+            document_text: documentText
         });
 
         const botMessage = { role: 'assistant', content: response.data.answer };
@@ -29,50 +30,55 @@ const Chat = () => {
         setLoading(false);
     };
 
-    const handleUpload = async (event) => {
-        const file = event.target.files[0];
+    const handleFileChange = (event) => {
+        setFile(event.target.files[0]);
+    };
+
+    const handleUpload = async () => {
+        if (!file) return;
+        setUploading(true);
+
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await axios.post('http://localhost:8001/upload/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        });
+        try {
+            const response = await axios.post('http://localhost:8001/upload/', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
 
-        setDocumentText(response.data.text);
-        setEntities(response.data.entities);
-        setMessages([
-            { role: 'system', content: 'NER results: ' + response.data.entities },
-            { role: 'system', content: 'Document: ' + response.data.text },
-            { role: 'assistant', content: 'Please select the summary length (short, medium, long) and the level of detail.' }
-        ]);
+            setDocumentText(response.data.text);
+            setMessages((prevMessages) => [...prevMessages, { role: 'assistant', content: 'Please select the summary length (short, medium, long) and the level of detail.' }]);
+        } catch (error) {
+            console.error('Error during file upload:', error);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleSummaryOptions = async (length, detail) => {
         setSummaryOptions({ length, detail });
         setLoading(true);
-        const response = await axios.post('http://localhost:8001/summarize/', {
-            text: documentText,
-            length: length,
-            detail: detail
-        });
 
-        const botMessage = { role: 'assistant', content: response.data.summary };
-        setMessages((prevMessages) => [...prevMessages, botMessage]);
-        setLoading(false);
+        try {
+            const summaryResponse = await axios.post('http://localhost:8001/summarize/', {
+                text: documentText,
+                length: length,
+                detail: detail
+            });
+
+            const botMessage = { role: 'assistant', content: summaryResponse.data.summary };
+            setMessages((prevMessages) => [...prevMessages, botMessage]);
+        } catch (error) {
+            console.error('Error during summarization:', error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <div className="chat-container">
-            {!documentText && (
-                <div className="file-upload">
-                    <input type="file" onChange={handleUpload} />
-                </div>
-            )}
-            {documentText && !summaryOptions && (
-                <SummaryOptions onSubmit={handleSummaryOptions} />
-            )}
             <div className="chat-messages">
                 {messages.map((message, index) => (
                     <Message key={index} role={message.role} content={message.content} />
@@ -83,6 +89,27 @@ const Chat = () => {
                         <div className="dot"></div>
                         <div className="dot"></div>
                     </div>
+                )}
+            </div>
+            <div className="file-upload-container">
+                {!documentText && (
+                    <div className="file-upload">
+                        <input type="file" onChange={handleFileChange} />
+                        <button onClick={handleUpload} disabled={uploading || !file}>
+                            {uploading ? (
+                                <div className="loading-indicator">
+                                    <div className="dot"></div>
+                                    <div className="dot"></div>
+                                    <div className="dot"></div>
+                                </div>
+                            ) : (
+                                'Submit'
+                            )}
+                        </button>
+                    </div>
+                )}
+                {documentText && !summaryOptions && (
+                    <SummaryOptions onSubmit={handleSummaryOptions} />
                 )}
             </div>
             <div className="chat-input">
@@ -104,3 +131,5 @@ const Chat = () => {
 };
 
 export default Chat;
+
+

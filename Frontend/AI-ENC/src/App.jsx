@@ -5,7 +5,7 @@ function App() {
     return (
         <div className="app">
             <header className="app-header">
-                <h1>Document Summarization and Chatbot</h1>
+                <h1>Nutshell</h1>
             </header>
             <Chat />
         </div>

@@ -121,12 +121,12 @@ button:hover {
     background-color: #0056b3;
 }
 
-.typing-indicator {
+.typing-indicator, .loading-indicator {
     display: flex;
     gap: 0.2rem;
 }
 
-.typing-indicator .dot {
+.typing-indicator .dot, .loading-indicator .dot {
     width: 8px;
     height: 8px;
     background-color: #007bff;
@@ -134,15 +134,15 @@ button:hover {
     animation: typing 1.2s infinite;
 }
 
-.typing-indicator .dot:nth-child(1) {
+.typing-indicator .dot:nth-child(1), .loading-indicator .dot:nth-child(1) {
     animation-delay: 0s;
 }
 
-.typing-indicator .dot:nth-child(2) {
+.typing-indicator .dot:nth-child(2), .loading-indicator .dot:nth-child(2) {
     animation-delay: 0.2s;
 }
 
-.typing-indicator .dot:nth-child(3) {
+.typing-indicator .dot:nth-child(3), .loading-indicator .dot:nth-child(3) {
     animation-delay: 0.4s;
 }
 

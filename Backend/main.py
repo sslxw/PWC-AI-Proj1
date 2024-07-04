@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,15 +11,12 @@ import os
 
 app = FastAPI()
 
-# Load environment variables
 load_dotenv()
-openai.api_key = ""
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Set up CORS
 origins = [
     "http://localhost:3000",
     "http://localhost:5173",
-    # Add other origins as needed
 ]
 
 app.add_middleware(
@@ -33,14 +30,16 @@ app.add_middleware(
 class SummarizationRequest(BaseModel):
     text: str
     length: str
+    detail: str
 
 class ChatMessage(BaseModel):
-    message: str
+    role: str
+    content: str
 
 class ChatHistory(BaseModel):
-    history: List[Dict[str, Any]]
+    history: List[ChatMessage]
     document_text: str
-    entities: str
+    entities: str = ""  # Default to empty string if not provided
 
 @app.post("/upload/")
 async def upload_file(file: UploadFile):
@@ -60,18 +59,17 @@ async def upload_file(file: UploadFile):
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant that identifies and highlights key entities in the provided text."},
+            {"role": "system", "content": "You are a helpful assistant. Please highlight the following entities in the document (e.g., names, locations, and organizations) and put them in the following format: Names: /n Locations: /n Organizations: /n and if any of them are empty write nothing."},
             {"role": "user", "content": prompt}
         ],
         max_tokens=4000
     )
     ner_result = response['choices'][0]['message']['content']
-    
     return {"text": text, "entities": ner_result}
 
 @app.post("/summarize/")
 async def summarize(request: SummarizationRequest):
-    prompt = f"Summarize this text in a {request.length} way: {request.text}"
+    prompt = f"Summarize this text in a {request.length} way with {request.detail} detail: {request.text}"
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=[
@@ -85,12 +83,11 @@ async def summarize(request: SummarizationRequest):
 
 @app.post("/chat/")
 async def chat(request: ChatHistory):
-    # Add document text and entities to the conversation context
     system_message = {
         "role": "system",
-        "content": f"only answer questions that are related to the document and entities if they are not related apologize and say you cant answer it. Document: {request.document_text}\n\nEntities: {request.entities}."
+        "content": f"Only answer questions that are related to the document and entities. If they are not related, apologize and say you can't answer it. Document: {request.document_text}\n\nEntities: {request.entities}."
     }
-    messages = [system_message] + request.history
+    messages = [system_message] + [{"role": msg.role, "content": msg.content} for msg in request.history]
     response = openai.ChatCompletion.create(
         model="gpt-4o",
         messages=messages,
