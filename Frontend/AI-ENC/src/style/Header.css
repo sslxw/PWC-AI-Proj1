@@ -1,0 +1,10 @@
+.header {
+  margin-top: 50px;
+  width: 1000px;
+}
+
+.text {
+  font-size: 30px;
+  text-align: left;
+  font-weight: bold;
+}

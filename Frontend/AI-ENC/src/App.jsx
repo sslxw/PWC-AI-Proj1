@@ -1,15 +1,19 @@
-import React from 'react';
-import Chat from './components/Chat';
+import React from "react";
+import Chat from "./components/Chat";
+import "./style/App.css";
+import Header from "./components/Header";
 
 function App() {
-    return (
-        <div className="app">
-            <header className="app-header">
-                <h1>Nutshell</h1>
-            </header>
-            <Chat />
-        </div>
-    );
+  return (
+    <>
+      <div className="background" />
+      <div className="content">
+        <Header />
+        <br />
+        <Chat />
+      </div>
+    </>
+  );
 }
 
 export default App;

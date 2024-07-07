@@ -5,14 +5,14 @@ from pydantic import BaseModel
 import openai
 import docx2txt
 import fitz  # PyMuPDF
-from typing import List, Dict, Any
+from typing import List
 from dotenv import load_dotenv
 import os
 
 app = FastAPI()
 
 load_dotenv()
-openai.api_key = os.getenv('OPENAI_API_KEY')
+openai.api_key = os.getenv("OPENAI-API-KEY")
 
 origins = [
     "http://localhost:3000",
@@ -65,6 +65,7 @@ async def upload_file(file: UploadFile):
         max_tokens=4000
     )
     ner_result = response['choices'][0]['message']['content']
+    print(ner_result)
     return {"text": text, "entities": ner_result}
 
 @app.post("/summarize/")
